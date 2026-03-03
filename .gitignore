@@ -1,0 +1,12 @@
+# Config
+.env
+*.toml
+
+# IDE
+.vscode
+
+# Data
+garage
+
+# Binaries
+*.exe
