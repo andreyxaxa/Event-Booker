@@ -8,5 +8,8 @@ CREATE TABLE IF NOT EXISTS bookings
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx
+CREATE INDEX IF NOT EXISTS idx_bookings_expires
     ON bookings(expires_at) WHERE status = 'pending';
+
+CREATE INDEX IF NOT EXISTS idx_bookings_event_id
+    ON bookings(event_id);
