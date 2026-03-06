@@ -127,3 +127,28 @@ func (r *BookingRepo) MarkCancelled(ctx context.Context, limit int64) ([]dto.Can
 
 	return cancelledBookings, nil
 }
+
+func (r *BookingRepo) GetStatus(ctx context.Context, bookingID int64) (string, error) {
+	sql, args, err := r.Builder.
+		Select(statusColumn).
+		From(bookingsTable).
+		Where(squirrel.Eq{idColumn: bookingID}).
+		ToSql()
+	if err != nil {
+		return "", fmt.Errorf("BookingRepo - GetStatus - r.Builder.ToSql: %w", err)
+	}
+
+	executor := r.GetExecutor(ctx)
+
+	var status string
+
+	err = executor.QueryRow(ctx, sql, args...).Scan(&status)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", fmt.Errorf("BookingRepo - GetStatus: %w", errs.ErrBookingNotFound)
+		}
+		return "", fmt.Errorf("BookingRepo - GetStatus - QueryRow.Scan: %w", err)
+	}
+
+	return status, nil
+}

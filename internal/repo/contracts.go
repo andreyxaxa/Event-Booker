@@ -19,6 +19,7 @@ type (
 		Create(ctx context.Context, eventID int64, email string, bookingTTL string) (entity.Booking, error)
 		MarkAsConfirmed(ctx context.Context, bookingID int64) (entity.Booking, error)
 		MarkCancelled(ctx context.Context, limit int64) ([]dto.CancelledBooking, error)
+		GetStatus(ctx context.Context, bookingID int64) (string, error)
 	}
 
 	OutboxRepo interface {
