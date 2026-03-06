@@ -15,6 +15,7 @@ type (
 		CancelerWorker CancelerWorker
 		NotifierWorker NotifierWorker
 		SMTP           SMTP
+		Swagger        Swagger
 	}
 
 	HTTP struct {
@@ -51,6 +52,10 @@ type (
 		Password string `env:"SMTP_PASSWORD,required"`
 		Host     string `env:"SMTP_HOST,required"`
 		Port     string `env:"SMTP_PORT,required"`
+	}
+
+	Swagger struct {
+		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
 	}
 )
 
