@@ -23,5 +23,8 @@ func NewEventsRoutes(apiV1Group fiber.Router, b usecase.BookingUseCase, l logger
 
 		// /bookings
 		bookingsGroup.Get("/:id", r.getBookingStatus)
+
+		// web
+		apiV1Group.Get("/", r.showUI)
 	}
 }

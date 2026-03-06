@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Booker</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --accent: #e8ff47;
+    --accent2: #47d4ff;
+    --danger: #ff4747;
+    --success: #47ff8a;
+    --warning: #ffb347;
+    --text: #f0f0f0;
+    --muted: #666;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 52px;
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+    margin-right: 32px;
+  }
+  .logo span { color: var(--text); }
+  .nav-tabs { display: flex; gap: 0; }
+  .nav-tab {
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* LAYOUT */
+  .page { display: none; padding: 32px 24px; max-width: 1100px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+  }
+  .card-title {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /* FORMS */
+  .form-group { margin-bottom: 14px; }
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #d4e83d; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-success { background: var(--success); color: #000; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* EVENTS TABLE */
+  .events-list { display: flex; flex-direction: column; gap: 8px; }
+  .event-row {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 40px 1fr 140px 120px 100px 80px;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.15s;
+  }
+  .event-row:hover { border-color: #3a3a3a; }
+  .event-id {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .event-name { font-weight: 500; font-size: 13px; }
+  .event-date { font-size: 11px; color: var(--muted); }
+  .seats-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .seats-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .seats-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .seats-fill.full { background: var(--danger); }
+  .seats-fill.near { background: var(--warning); }
+  .seats-text { font-size: 10px; color: var(--muted); }
+  .ttl-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+  }
+  .event-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+  /* BOOKINGS TABLE */
+  .bookings-list { display: flex; flex-direction: column; gap: 6px; }
+  .booking-row {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: 50px 1fr 130px 100px 80px 100px;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+  .status-pending {
+    background: rgba(255,179,71,0.15);
+    color: var(--warning);
+    border: 1px solid rgba(255,179,71,0.3);
+  }
+  .status-confirmed {
+    background: rgba(71,255,138,0.1);
+    color: var(--success);
+    border: 1px solid rgba(71,255,138,0.25);
+  }
+  .status-cancelled {
+    background: rgba(255,71,71,0.1);
+    color: var(--danger);
+    border: 1px solid rgba(255,71,71,0.25);
+  }
+  .status-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .status-pending .status-dot { animation: pulse 1.2s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .countdown {
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .countdown.urgent { color: var(--danger); }
+  .countdown.ok { color: var(--warning); }
+  .countdown.none { color: var(--muted); }
+
+  .event-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+  .event-card:hover { border-color: #3a3a3a; }
+  .event-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .event-card-name { font-family: var(--sans); font-weight: 600; font-size: 15px; }
+  .event-card-id { font-size: 10px; color: var(--muted); }
+  .event-card-meta { display: flex; flex-direction: column; gap: 5px; }
+  .meta-row { display: flex; gap: 6px; font-size: 11px; }
+  .meta-key { color: var(--muted); min-width: 80px; }
+  .meta-val { color: var(--text); }
+
+  #toasts {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+  }
+  .toast {
+    padding: 10px 16px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: var(--mono);
+    min-width: 240px;
+    max-width: 380px;
+    animation: slideIn 0.2s ease;
+    border: 1px solid;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .toast-success { background: rgba(71,255,138,0.1); border-color: rgba(71,255,138,0.3); color: var(--success); }
+  .toast-error { background: rgba(255,71,71,0.1); border-color: rgba(255,71,71,0.3); color: var(--danger); }
+  .toast-info { background: rgba(71,212,255,0.1); border-color: rgba(71,212,255,0.3); color: var(--accent2); }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+  .section-subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 12px;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    width: 380px;
+    max-width: 95vw;
+  }
+  .modal-title {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  .key {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1px 5px;
+    font-size: 11px;
+    color: var(--accent2);
+  }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .event-row { grid-template-columns: 1fr 1fr; }
+    .booking-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Event<span>Booker</span></div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('admin')">⚙ Admin</div>
+    <div class="nav-tab" onclick="switchTab('user')">👤 User</div>
+  </div>
+</nav>
+
+<!-- ADMIN PAGE -->
+<div class="page active" id="page-admin">
+
+  <div class="grid-2" style="margin-bottom:24px;">
+
+    <!-- CREATE EVENT FORM -->
+    <div class="card">
+      <div class="card-title">Создать мероприятие</div>
+      <div class="form-group">
+        <label>Название</label>
+        <input type="text" id="admin-event-name" placeholder="Название мероприятия">
+      </div>
+      <div class="form-group">
+        <label>Дата и время</label>
+        <input type="datetime-local" id="admin-event-date">
+      </div>
+      <div class="form-group">
+        <label>Количество мест</label>
+        <input type="number" id="admin-event-seats" placeholder="100" min="1">
+      </div>
+      <div class="form-group">
+        <label>TTL брони (Go duration: 15m, 1h, 30m…)</label>
+        <input type="text" id="admin-event-ttl" placeholder="15m" value="15m">
+      </div>
+      <button class="btn btn-primary" onclick="adminCreateEvent()">+ Создать</button>
+    </div>
+
+    <!-- CHECK BOOKING STATUS -->
+    <div class="card">
+      <div class="card-title">Статус брони</div>
+      <div class="form-group">
+        <label>ID брони</label>
+        <input type="number" id="admin-booking-id-status" placeholder="123">
+      </div>
+      <button class="btn btn-secondary" onclick="adminGetBookingStatus()">Проверить</button>
+      <div id="admin-booking-status-result" style="margin-top:14px; font-size:12px; min-height:24px;"></div>
+
+      <hr class="divider">
+
+      <div class="card-title">Подтвердить бронь (Admin)</div>
+      <div class="form-group">
+        <label>ID брони</label>
+        <input type="number" id="admin-confirm-id" placeholder="123">
+      </div>
+      <button class="btn btn-success" onclick="adminConfirmBooking()">✓ Подтвердить</button>
+      <div id="admin-confirm-result" style="margin-top:10px; font-size:12px; min-height:20px;"></div>
+    </div>
+  </div>
+
+  <!-- EVENTS LIST (Admin) -->
+  <div class="section-header">
+    <div>
+      <div class="section-title">Мероприятия</div>
+      <div class="section-subtitle">Введите ID для просмотра деталей. Список не авторефрешится — жмите «Обновить».</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="number" id="admin-event-id-lookup" placeholder="Event ID…" style="width:120px;">
+      <button class="btn btn-secondary btn-sm" onclick="adminLookupEvent()">Найти</button>
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminEvents()">↺ Обновить</button>
+    </div>
+  </div>
+
+  <div id="admin-events-list" class="events-list">
+    <div class="empty">Нет данных. Создайте мероприятие или введите ID выше.</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- BOOKINGS SECTION (Admin) -->
+  <div class="section-header">
+    <div>
+      <div class="section-title">Брони мероприятия</div>
+      <div class="section-subtitle">Pending-брони исчезают через BookingTTL — обновляйте список вручную.</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="number" id="admin-bookings-event-id" placeholder="Event ID…" style="width:120px;">
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminBookingsForEvent()">Загрузить</button>
+    </div>
+  </div>
+
+  <div id="admin-bookings-list" class="bookings-list">
+    <div class="empty">Введите ID мероприятия выше.</div>
+  </div>
+</div>
+
+<!-- USER PAGE -->
+<div class="page" id="page-user">
+
+  <div class="section-header">
+    <div>
+      <div class="section-title">Доступные мероприятия</div>
+      <div class="section-subtitle">Найдите мероприятие по ID и забронируйте место.</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="number" id="user-event-id" placeholder="Event ID…" style="width:120px;">
+      <button class="btn btn-secondary btn-sm" onclick="userLookupEvent()">Найти</button>
+    </div>
+  </div>
+
+  <div id="user-events-grid" class="grid-3" style="margin-bottom:32px;">
+    <div class="empty" style="grid-column:1/-1;">Введите ID мероприятия выше, чтобы найти его.</div>
+  </div>
+
+  <!-- MY BOOKINGS -->
+  <div class="section-header">
+    <div>
+      <div class="section-title">Мои брони</div>
+      <div class="section-subtitle">Pending-статус исчезнет через TTL. Подтвердите бронь своевременно.</div>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="renderUserBookings()">↺ Обновить</button>
+  </div>
+
+  <div id="user-bookings-list" class="bookings-list">
+    <div class="empty">У вас нет активных броней.</div>
+  </div>
+</div>
+
+<!-- BOOK MODAL -->
+<div class="modal-overlay" id="modal-book">
+  <div class="modal">
+    <div class="modal-title">Забронировать место</div>
+    <div id="modal-event-info" style="margin-bottom:14px;font-size:12px;color:var(--muted);"></div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="book-email" placeholder="you@example.com">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-book')">Отмена</button>
+      <button class="btn btn-primary" onclick="submitBook()">Забронировать</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+
+const state = {
+  adminEvents: [],     // [{id, name, date, totalSeats, bookedSeats, freeSeats, bookingTTL}]
+  adminBookings: [],   // bookings for a given event (stored locally after fetch)
+  userEvents: [],      // events found by user
+  userBookings: [],    // [{bookingID, eventID, email, status, expiresAt, eventName}]
+  bookingTarget: null, // {eventId, eventName}
+  countdownTimers: [], // interval IDs to clear
+};
+
+const api = () => 'http://localhost:8080/v1';
+
+async function apiFetch(path, options = {}) {
+  const url = api() + path;
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
+}
+
+function fmtTTL(ns) {
+
+  if (!ns) return '—';
+  const ms = Math.round(ns / 1e6);
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}h ${m % 60}m`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+
+function secondsUntil(iso) {
+  return Math.floor((new Date(iso) - Date.now()) / 1000);
+}
+
+function fmtCountdown(secs) {
+  if (secs <= 0) return { text: 'истекло', cls: 'none' };
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  const text = m > 0 ? `${m}м ${s}с` : `${s}с`;
+  const cls = secs < 60 ? 'urgent' : secs < 300 ? 'ok' : 'none';
+  return { text, cls };
+}
+
+function seatsClass(booked, total) {
+  const pct = total > 0 ? booked / total : 0;
+  if (pct >= 1) return 'full';
+  if (pct >= 0.8) return 'near';
+  return '';
+}
+
+function statusBadge(status) {
+  const map = { pending: 'status-pending', confirmed: 'status-confirmed', cancelled: 'status-cancelled' };
+  const cls = map[status] || 'status-pending';
+  return `<span class="status-badge ${cls}"><span class="status-dot"></span>${status}</span>`;
+}
+
+function clearCountdowns() {
+  state.countdownTimers.forEach(clearInterval);
+  state.countdownTimers = [];
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach((el, i) => {
+    el.classList.toggle('active', (i === 0 && tab === 'admin') || (i === 1 && tab === 'user'));
+  });
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById(`page-${tab}`).classList.add('active');
+  clearCountdowns();
+  if (tab === 'user') renderUserBookings();
+}
+
+function openBookModal(eventId, eventName) {
+  state.bookingTarget = { eventId, eventName };
+  document.getElementById('modal-event-info').textContent = `Мероприятие: ${eventName} (ID ${eventId})`;
+  document.getElementById('book-email').value = '';
+  document.getElementById('modal-book').classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function adminCreateEvent() {
+  const name = document.getElementById('admin-event-name').value.trim();
+  const dateVal = document.getElementById('admin-event-date').value;
+  const seats = parseInt(document.getElementById('admin-event-seats').value);
+  const ttl = document.getElementById('admin-event-ttl').value.trim();
+
+  if (!name || !dateVal || !seats || !ttl) { toast('Заполните все поля', 'error'); return; }
+
+  try {
+    const data = await apiFetch('/events', {
+      method: 'POST',
+      body: JSON.stringify({ name, date: new Date(dateVal).toISOString(), total_seats: seats, booking_ttl: ttl }),
+    });
+    toast(`Мероприятие создано: ${data.name} (ID ${data.id})`, 'success');
+    document.getElementById('admin-event-name').value = '';
+    document.getElementById('admin-event-date').value = '';
+    document.getElementById('admin-event-seats').value = '';
+    
+    await loadEventById(data.id);
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+}
+
+async function adminLookupEvent() {
+  const id = parseInt(document.getElementById('admin-event-id-lookup').value);
+  if (!id) { toast('Введите ID', 'error'); return; }
+  await loadEventById(id);
+}
+
+async function loadEventById(id) {
+  try {
+    const data = await apiFetch(`/events/${id}`);
+    const existing = state.adminEvents.findIndex(e => e.id === data.id);
+    if (existing >= 0) state.adminEvents[existing] = data;
+    else state.adminEvents.unshift(data);
+    renderAdminEvents();
+  } catch(e) { toast('Ошибка загрузки события: ' + e.message, 'error'); }
+}
+
+function loadAdminEvents() {
+  if (state.adminEvents.length === 0) { toast('Нет загруженных мероприятий. Создайте или найдите по ID.', 'info'); return; }
+ 
+  Promise.all(state.adminEvents.map(e => apiFetch(`/events/${e.id}`)))
+    .then(results => {
+      state.adminEvents = results;
+      renderAdminEvents();
+      toast('Обновлено', 'success');
+    })
+    .catch(e => toast('Ошибка: ' + e.message, 'error'));
+}
+
+function renderAdminEvents() {
+  const container = document.getElementById('admin-events-list');
+  if (state.adminEvents.length === 0) {
+    container.innerHTML = '<div class="empty">Нет данных.</div>';
+    return;
+  }
+  container.innerHTML = state.adminEvents.map(e => {
+    const pct = e.total_seats > 0 ? Math.round((e.booked_seats || 0) / e.total_seats * 100) : 0;
+    const cls = seatsClass(e.booked_seats || 0, e.total_seats);
+    return `
+    <div class="event-row">
+      <div class="event-id">#${e.id}</div>
+      <div>
+        <div class="event-name">${e.name}</div>
+        <div class="event-date">${fmtDate(e.date)}</div>
+      </div>
+      <div class="seats-bar">
+        <div class="seats-track"><div class="seats-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="seats-text">${e.free_seats ?? (e.total_seats - (e.booked_seats||0))} свободно / ${e.total_seats} всего</div>
+      </div>
+      <div><span class="ttl-badge">TTL: ${fmtTTL(e.booking_ttl)}</span></div>
+      <div></div>
+      <div class="event-actions">
+        <button class="btn btn-secondary btn-sm" onclick="adminLookupEventById(${e.id})">↺</button>
+        <button class="btn btn-primary btn-sm" onclick="openBookModal(${e.id}, '${e.name.replace(/'/g,"\\'")}')">+ Бронь</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function adminLookupEventById(id) { await loadEventById(id); toast(`Событие #${id} обновлено`, 'info'); }
+
+async function adminGetBookingStatus() {
+  const id = parseInt(document.getElementById('admin-booking-id-status').value);
+  if (!id) { toast('Введите ID брони', 'error'); return; }
+  const res = document.getElementById('admin-booking-status-result');
+  try {
+    const data = await apiFetch(`/bookings/${id}`);
+    res.innerHTML = `Статус брони #${id}: ${statusBadge(data.status)}`;
+  } catch(e) {
+    res.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`;
+  }
+}
+
+async function adminConfirmBooking() {
+  const id = parseInt(document.getElementById('admin-confirm-id').value);
+  if (!id) { toast('Введите ID брони', 'error'); return; }
+  const res = document.getElementById('admin-confirm-result');
+  try {
+    const data = await apiFetch(`/events/${id}/confirm`, { method: 'POST' });
+    res.innerHTML = `Подтверждено: бронь #${data.id}, статус: ${statusBadge(data.status)}`;
+    toast(`Бронь #${data.id} подтверждена`, 'success');
+    // Update local booking in user state if exists
+    const ub = state.userBookings.find(b => b.bookingID === data.id);
+    if (ub) { ub.status = data.status; renderUserBookings(); }
+  } catch(e) {
+    res.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`;
+    toast('Ошибка: ' + e.message, 'error');
+  }
+}
+
+function loadAdminBookingsForEvent() {
+  const id = parseInt(document.getElementById('admin-bookings-event-id').value);
+  if (!id) { toast('Введите ID мероприятия', 'error'); return; }
+  const bookings = state.userBookings.filter(b => b.eventID === id);
+  renderAdminBookings(bookings, id);
+}
+
+function renderAdminBookings(bookings, eventId) {
+  const container = document.getElementById('admin-bookings-list');
+  if (!bookings || bookings.length === 0) {
+    container.innerHTML = `<div class="empty">Нет броней для мероприятия #${eventId}. Брони создаются через пользовательский интерфейс или API.</div>`;
+    return;
+  }
+  clearCountdowns();
+  container.innerHTML = bookings.map(b => {
+    const expiresId = `exp-${b.bookingID}`;
+    return `
+    <div class="booking-row">
+      <div class="event-id">#${b.bookingID}</div>
+      <div>${b.email}</div>
+      <div>${fmtDate(b.expiresAt)}</div>
+      <div>${statusBadge(b.status)}</div>
+      <div id="${expiresId}" class="countdown none"></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-success btn-sm" onclick="confirmBookingById(${b.bookingID})">✓</button>
+      </div>
+    </div>`;
+  }).join('');
+  bookings.forEach(b => startCountdown(b, `exp-${b.bookingID}`));
+}
+
+async function confirmBookingById(id) {
+  try {
+    await apiFetch(`/events/${id}/confirm`, { method: 'POST' });
+    toast(`Бронь #${id} подтверждена`, 'success');
+    const ub = state.userBookings.find(b => b.bookingID === id);
+    if (ub) { ub.status = 'confirmed'; }
+    loadAdminBookingsForEvent();
+    renderUserBookings();
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+}
+
+async function userLookupEvent() {
+  const id = parseInt(document.getElementById('user-event-id').value);
+  if (!id) { toast('Введите ID мероприятия', 'error'); return; }
+  try {
+    const data = await apiFetch(`/events/${id}`);
+    const existing = state.userEvents.findIndex(e => e.id === data.id);
+    if (existing >= 0) state.userEvents[existing] = data;
+    else state.userEvents.unshift(data);
+    renderUserEvents();
+  } catch(e) { toast('Мероприятие не найдено: ' + e.message, 'error'); }
+}
+
+function renderUserEvents() {
+  const container = document.getElementById('user-events-grid');
+  if (state.userEvents.length === 0) {
+    container.innerHTML = '<div class="empty" style="grid-column:1/-1;">Введите ID мероприятия выше, чтобы найти его.</div>';
+    return;
+  }
+  container.innerHTML = state.userEvents.map(e => {
+    const free = e.free_seats ?? (e.total_seats - (e.booked_seats || 0));
+    const pct = e.total_seats > 0 ? Math.round((e.booked_seats || 0) / e.total_seats * 100) : 0;
+    const cls = seatsClass(e.booked_seats || 0, e.total_seats);
+    const canBook = free > 0;
+    return `
+    <div class="event-card">
+      <div class="event-card-header">
+        <div class="event-card-name">${e.name}</div>
+        <div class="event-card-id">#${e.id}</div>
+      </div>
+      <div class="event-card-meta">
+        <div class="meta-row"><span class="meta-key">Дата:</span><span class="meta-val">${fmtDate(e.date)}</span></div>
+        <div class="meta-row"><span class="meta-key">Мест:</span><span class="meta-val">${free} из ${e.total_seats} свободно</span></div>
+        <div class="meta-row"><span class="meta-key">TTL:</span><span class="meta-val">${fmtTTL(e.booking_ttl)}</span></div>
+      </div>
+      <div class="seats-bar">
+        <div class="seats-track"><div class="seats-fill ${cls}" style="width:${pct}%"></div></div>
+      </div>
+      <button class="btn btn-primary" ${canBook ? '' : 'disabled'} onclick="openBookModal(${e.id}, '${e.name.replace(/'/g,"\\'")}')">
+        ${canBook ? '+ Забронировать' : 'Мест нет'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+
+async function submitBook() {
+  const email = document.getElementById('book-email').value.trim();
+  if (!email || !email.includes('@')) { toast('Введите корректный email', 'error'); return; }
+  const { eventId, eventName } = state.bookingTarget;
+  try {
+    const data = await apiFetch(`/events/${eventId}/book`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    closeModal('modal-book');
+    toast(`Бронь #${data.id} создана! TTL до ${fmtDate(data.expires_at)}`, 'success');
+    
+    state.userBookings.unshift({
+      bookingID: data.id,
+      eventID: data.event_id,
+      email: data.email,
+      status: data.status,
+      expiresAt: data.expires_at,
+      eventName,
+    });
+    renderUserBookings();
+    const updated = await apiFetch(`/events/${eventId}`);
+    const idx = state.userEvents.findIndex(e => e.id === eventId);
+    if (idx >= 0) state.userEvents[idx] = updated;
+    const adminIdx = state.adminEvents.findIndex(e => e.id === eventId);
+    if (adminIdx >= 0) state.adminEvents[adminIdx] = updated;
+    renderUserEvents();
+    renderAdminEvents();
+  } catch(e) { toast('Ошибка бронирования: ' + e.message, 'error'); }
+}
+
+function renderUserBookings() {
+  clearCountdowns();
+  const container = document.getElementById('user-bookings-list');
+  if (state.userBookings.length === 0) {
+    container.innerHTML = '<div class="empty">У вас нет активных броней.</div>';
+    return;
+  }
+  container.innerHTML = state.userBookings.map(b => {
+    const expiresId = `uexp-${b.bookingID}`;
+    return `
+    <div class="booking-row" id="ubrow-${b.bookingID}">
+      <div class="event-id">#${b.bookingID}</div>
+      <div>
+        <div style="font-weight:500">${b.eventName || 'Event #' + b.eventID}</div>
+        <div style="color:var(--muted);font-size:11px">${b.email}</div>
+      </div>
+      <div>${fmtDate(b.expiresAt)}</div>
+      <div>${statusBadge(b.status)}</div>
+      <div id="${expiresId}" class="countdown none"></div>
+      <div style="display:flex;gap:6px;">
+        ${b.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="userConfirmBooking(${b.bookingID})">✓ Подтвердить</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="userRefreshBooking(${b.bookingID})">↺</button>
+        <button class="btn btn-danger btn-sm" onclick="removeUserBooking(${b.bookingID})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  state.userBookings.forEach(b => startCountdown(b, `uexp-${b.bookingID}`));
+}
+
+async function userConfirmBooking(id) {
+  try {
+    const data = await apiFetch(`/events/${id}/confirm`, { method: 'POST' });
+    const ub = state.userBookings.find(b => b.bookingID === id);
+    if (ub) ub.status = data.status;
+    toast(`Бронь #${id} подтверждена!`, 'success');
+    renderUserBookings();
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+}
+
+async function userRefreshBooking(id) {
+  try {
+    const data = await apiFetch(`/bookings/${id}`);
+    const ub = state.userBookings.find(b => b.bookingID === id);
+    if (ub) ub.status = data.status;
+    renderUserBookings();
+    toast(`Статус обновлён: ${data.status}`, 'info');
+  } catch(e) {
+    const ub = state.userBookings.find(b => b.bookingID === id);
+    if (ub) ub.status = 'cancelled';
+    renderUserBookings();
+    toast('Бронь не найдена (возможно, истекла)', 'error');
+  }
+}
+
+function removeUserBooking(id) {
+  state.userBookings = state.userBookings.filter(b => b.bookingID !== id);
+  renderUserBookings();
+}
+
+function startCountdown(booking, elId) {
+  if (booking.status !== 'pending' || !booking.expiresAt) return;
+  const update = () => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const secs = secondsUntil(booking.expiresAt);
+    if (secs <= 0) {
+      el.textContent = 'истекло';
+      el.className = 'countdown none';
+      const ub = state.userBookings.find(b => b.bookingID === booking.bookingID);
+      if (ub && ub.status === 'pending') {
+        ub.status = 'cancelled';
+        setTimeout(renderUserBookings, 100);
+      }
+      return;
+    }
+    const { text, cls } = fmtCountdown(secs);
+    el.textContent = text;
+    el.className = `countdown ${cls}`;
+  };
+  update();
+  const t = setInterval(update, 1000);
+  state.countdownTimers.push(t);
+}
+
+document.getElementById('modal-book').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('modal-book');
+});
+</script>
+</body>
+</html>
