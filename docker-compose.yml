@@ -1,0 +1,50 @@
+services:
+  db:
+    container_name: db-event-booker
+    image: postgres:18.1-alpine
+    environment:
+      POSTGRES_SSL_MODE: "disable"
+      POSTGRES_HOST: "db"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "event_booker_db"
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "sUp3RP4sSw0rD"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d event_booker_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  migrate:
+    container_name: migrate-event-booker
+    image: migrate/migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    entrypoint: ["migrate", 
+      "-path", "./migrations",
+      "-database", "postgres://user:sUp3RP4sSw0rD@db:5432/event_booker_db?sslmode=disable",
+      "up"
+    ]
+  
+  app:
+    container_name: event-booker-v1
+    build: .
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:
