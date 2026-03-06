@@ -132,3 +132,12 @@ func (uc *BookingUseCase) GetMessagesToSend(ctx context.Context, limit int64) ([
 
 	return cb, nil
 }
+
+func (uc *BookingUseCase) GetBookingStatus(ctx context.Context, bookingID int64) (string, error) {
+	status, err := uc.bookingRepo.GetStatus(ctx, bookingID)
+	if err != nil {
+		return "", fmt.Errorf("BookingUseCase - GetBookingStatus - uc.bookingRepo.GetStatus: %w", err)
+	}
+
+	return status, nil
+}

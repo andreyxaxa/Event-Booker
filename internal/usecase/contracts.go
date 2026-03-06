@@ -15,5 +15,6 @@ type (
 		GetEventInfo(ctx context.Context, eventID int64) (entity.Event, int64, error)
 		ExpireBookings(ctx context.Context, limit int64) (int, error)
 		GetMessagesToSend(ctx context.Context, limit int64) ([]dto.CancelledBooking, error)
+		GetBookingStatus(ctx context.Context, bookingID int64) (string, error)
 	}
 )
