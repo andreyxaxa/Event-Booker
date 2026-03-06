@@ -1,5 +1,5 @@
 package request
 
-type BookSeat struct {
+type BookSeatRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }

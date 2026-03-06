@@ -2,7 +2,7 @@ package response
 
 import "time"
 
-type BookSeat struct {
+type BookSeatResponse struct {
 	ID        int64     `json:"id"`
 	EventID   int64     `json:"event_id"`
 	Email     string    `json:"email"`

@@ -9,5 +9,5 @@ type EventInfo struct {
 	TotalSeats  int64         `json:"total_seats"`
 	BookedSeats int64         `json:"booked_seats"`
 	FreeSeats   int64         `json:"free_seats"`
-	BookingTTL  time.Duration `json:"booking_ttl"`
+	BookingTTL  time.Duration `json:"booking_ttl" swaggertype:"string" example:"1h"`
 }

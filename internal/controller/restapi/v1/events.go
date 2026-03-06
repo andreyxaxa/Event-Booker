@@ -11,8 +11,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// @Summary      Create new event
+// @Description  Creates new event with the number of seats and the booking duration
+// @Tags         events
+// @Accept       json
+// @Produce      json
+// @Param        body  body      request.EventRequest    true  "Event info"
+// @Success      201   {object}  response.EventResponse  "Event created"
+// @Failure      400   {object}  response.Error          "Invalid request"
+// @Failure      500   {object}  response.Error          "Internal error"
+// @Router       /v1/events [post]
 func (r *V1) createEvent(ctx *fiber.Ctx) error {
-	var body request.Event
+	var body request.EventRequest
 
 	err := ctx.BodyParser(&body)
 	if err != nil {
@@ -33,7 +43,7 @@ func (r *V1) createEvent(ctx *fiber.Ctx) error {
 		return errorResponse(ctx, fiber.StatusInternalServerError, "internal error")
 	}
 
-	resp := response.Event{
+	resp := response.EventResponse{
 		ID:         e.ID,
 		Name:       e.Name,
 		Date:       e.Date,
@@ -44,8 +54,21 @@ func (r *V1) createEvent(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(resp)
 }
 
+// @Summary      Create new booking
+// @Description  Creates new booking by event id and user email
+// @Tags         events
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int                	   true  "Event ID"
+// @Param        body  body      request.BookSeatRequest   true  "Booking info"
+// @Success      201   {object}  response.BookSeatResponse "Successful booking"
+// @Failure      400   {object}  response.Error     	   "Invalid request"
+// @Failure      404   {object}  response.Error     	   "Event not found"
+// @Failure      409   {object}  response.Error     	   "No free seats"
+// @Failure      500   {object}  response.Error     	   "Internal error"
+// @Router       /v1/events/{id}/book [post]
 func (r *V1) book(ctx *fiber.Ctx) error {
-	var body request.BookSeat
+	var body request.BookSeatRequest
 
 	err := ctx.BodyParser(&body)
 	if err != nil {
@@ -71,7 +94,7 @@ func (r *V1) book(ctx *fiber.Ctx) error {
 		return errorResponse(ctx, fiber.StatusInternalServerError, "internal error")
 	}
 
-	resp := response.BookSeat{
+	resp := response.BookSeatResponse{
 		ID:        booking.ID,
 		EventID:   booking.EventID,
 		Email:     booking.Email,
@@ -82,6 +105,17 @@ func (r *V1) book(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(resp)
 }
 
+// @Summary      Confirm booking
+// @Description  Confirms booking by ID if it has not yet expired/confirmed already
+// @Tags         events
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int                         true  "Booking ID"
+// @Success      201  {object}  response.ConfirmedBooking   "Booking confirmed"
+// @Failure      400  {object}  response.Error              "Invalid request"
+// @Failure      404  {object}  response.Error              "Booking not found or cancelled/confirmed"
+// @Failure      500  {object}  response.Error              "Internal error"
+// @Router       /v1/events/{id}/confirm [post]
 func (r *V1) confirmBook(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 
@@ -109,6 +143,17 @@ func (r *V1) confirmBook(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(resp)
 }
 
+// @Summary      Get event info
+// @Description  Returns detailed information about an event, including the number of available and occupied seats
+// @Tags         events
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int                  true  "Event ID"
+// @Success      200  {object}  response.EventInfo   "Event info"
+// @Failure      400  {object}  response.Error       "Invalid request"
+// @Failure      404  {object}  response.Error       "Event not found"
+// @Failure      500  {object}  response.Error       "Internal error"
+// @Router       /v1/events/{id} [get]
 func (r *V1) getEventInfo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 
@@ -140,6 +185,17 @@ func (r *V1) getEventInfo(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(resp)
 }
 
+// @Summary      Get booking status
+// @Description  Returns current booking status: (pending, confirmed, expired)
+// @Tags         bookings
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int                      true  "Booking ID"
+// @Success      200  {object}  response.BookingStatus   "Current booking status"
+// @Failure      400  {object}  response.Error           "Invalid request"
+// @Failure      404  {object}  response.Error           "Booking not found"
+// @Failure      500  {object}  response.Error           "Internal error"
+// @Router       /v1/bookings/{id}/status [get]
 func (r *V1) getBookingStatus(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 

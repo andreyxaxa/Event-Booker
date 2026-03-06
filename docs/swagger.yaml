@@ -1,0 +1,261 @@
+definitions:
+  request.BookSeatRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  request.EventRequest:
+    properties:
+      booking_ttl:
+        example: 1h
+        type: string
+      date:
+        type: string
+      name:
+        type: string
+      total_seats:
+        type: integer
+    type: object
+  response.BookSeatResponse:
+    properties:
+      email:
+        type: string
+      event_id:
+        type: integer
+      expires_at:
+        type: string
+      id:
+        type: integer
+      status:
+        type: string
+    type: object
+  response.BookingStatus:
+    properties:
+      status:
+        type: string
+    type: object
+  response.ConfirmedBooking:
+    properties:
+      event_id:
+        type: integer
+      id:
+        type: integer
+      status:
+        type: string
+    type: object
+  response.Error:
+    properties:
+      error:
+        type: string
+    type: object
+  response.EventInfo:
+    properties:
+      booked_seats:
+        type: integer
+      booking_ttl:
+        example: 1h
+        type: string
+      date:
+        type: string
+      free_seats:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      total_seats:
+        type: integer
+    type: object
+  response.EventResponse:
+    properties:
+      booking_ttl:
+        example: 1h
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      total_seats:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/bookings/{id}/status:
+    get:
+      consumes:
+      - application/json
+      description: 'Returns current booking status: (pending, confirmed, expired)'
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current booking status
+          schema:
+            $ref: '#/definitions/response.BookingStatus'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Booking not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get booking status
+      tags:
+      - bookings
+  /v1/events:
+    post:
+      consumes:
+      - application/json
+      description: Creates new event with the number of seats and the booking duration
+      parameters:
+      - description: Event info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.EventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Event created
+          schema:
+            $ref: '#/definitions/response.EventResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Create new event
+      tags:
+      - events
+  /v1/events/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed information about an event, including the number
+        of available and occupied seats
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event info
+          schema:
+            $ref: '#/definitions/response.EventInfo'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Event not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get event info
+      tags:
+      - events
+  /v1/events/{id}/book:
+    post:
+      consumes:
+      - application/json
+      description: Creates new booking by event id and user email
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Booking info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.BookSeatRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successful booking
+          schema:
+            $ref: '#/definitions/response.BookSeatResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Event not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: No free seats
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Create new booking
+      tags:
+      - events
+  /v1/events/{id}/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirms booking by ID if it has not yet expired/confirmed already
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Booking confirmed
+          schema:
+            $ref: '#/definitions/response.ConfirmedBooking'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Booking not found or cancelled/confirmed
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Confirm booking
+      tags:
+      - events
+swagger: "2.0"
