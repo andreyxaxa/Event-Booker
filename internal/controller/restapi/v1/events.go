@@ -139,3 +139,28 @@ func (r *V1) getEventInfo(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(resp)
 }
+
+func (r *V1) getBookingStatus(ctx *fiber.Ctx) error {
+	idStr := ctx.Params("id")
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return errorResponse(ctx, fiber.StatusBadRequest, "invalid booking id")
+	}
+
+	status, err := r.b.GetBookingStatus(ctx.UserContext(), id)
+	if err != nil {
+		if errors.Is(err, errs.ErrBookingNotFound) {
+			return errorResponse(ctx, fiber.StatusNotFound, "booking not found")
+		}
+		r.logger.Error(err, "restapi - v1 - getBookingStatus")
+
+		return errorResponse(ctx, fiber.StatusInternalServerError, "internal error")
+	}
+
+	resp := response.BookingStatus{
+		Status: status,
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(resp)
+}
