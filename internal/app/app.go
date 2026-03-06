@@ -75,7 +75,7 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port), httpserver.Prefork(cfg.HTTP.UsePreforkMode))
-	restapi.NewRouter(httpServer.App, bookingUseCase, l)
+	restapi.NewRouter(httpServer.App, cfg, bookingUseCase, l)
 
 	// Start Components
 	err = cancelerWorker.Start(ctx)
